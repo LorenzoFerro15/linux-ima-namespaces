@@ -171,7 +171,7 @@ int ima_add_template_entry(struct ima_namespace *ns,
 			goto out;
 		}
 	}
-
+	printk(KERN_DEBUG "about to store measurement %p inode %p \n\n", ns, inode);
 	result = ima_add_digest_entry(ns, entry,
 				      !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE));
 	if (result < 0) {

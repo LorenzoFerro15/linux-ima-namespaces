@@ -199,12 +199,20 @@ int ima_get_action(struct ima_namespace *ns,
 		   const char *func_data, unsigned int *allowed_algos)
 {
 	int flags = IMA_MEASURE | IMA_AUDIT | IMA_APPRAISE | IMA_HASH;
+	int return_value;
 
 	flags &= ns->ima_policy_flag;
 
-	return ima_match_policy(ns, mnt_userns, inode, cred, secid, func, mask,
+	return_value =  ima_match_policy(ns, mnt_userns, inode, cred, secid, func, mask,
 				flags, pcr, template_desc, func_data,
 				allowed_algos);
+
+	/* if the file is in another user namespace will measure it 
+	may give problems */
+	if(mnt_userns->ima_ns != ns) {
+		return IMA_MEASURE;
+	}
+	return return_value;
 }
 
 static int ima_get_verity_digest(struct integrity_iint_cache *iint,
@@ -380,7 +388,9 @@ void ima_store_measurement(struct ima_namespace *ns,
 	}
 
 	result = ima_store_template(ns, entry, violation, inode, filename, pcr);
-	if ((!result || result == -EEXIST) && !(file->f_flags & O_DIRECT)) {
+	/* change the value of the integrity data associated with the inode only only if in
+	the init_ima_ns */
+	if ((!result || result == -EEXIST) && !(file->f_flags & O_DIRECT) && (&init_ima_ns == ns)) {
 		iint->flags |= IMA_MEASURED;
 		iint->measured_pcrs |= (0x1 << pcr);
 	}

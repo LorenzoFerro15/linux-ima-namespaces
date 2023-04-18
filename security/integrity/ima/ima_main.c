@@ -257,6 +257,7 @@ static int __process_measurement(struct ima_namespace *ns,
 	action = ima_get_action(ns, file_mnt_user_ns(file), inode, cred, secid,
 				mask, func, &pcr, &template_desc, NULL,
 				&allowed_algos);
+	printk(KERN_DEBUG "action %d namespace %p ima_ns %p inode %p", action, file_mnt_user_ns(file), ns, inode);
 	violation_check = ((func == FILE_CHECK || func == MMAP_CHECK) &&
 			   (ns->ima_policy_flag & IMA_MEASURE));
 	if (!action && !violation_check)

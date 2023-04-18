@@ -1896,21 +1896,21 @@ static int ima_parse_rule(struct user_namespace *user_ns,
 		}
 
 		/* IMA namespace only accepts AUDIT rules */
-		if (ns != &init_ima_ns && result == 0) {
-			switch (entry->action) {
-			case MEASURE:
-			case APPRAISE:
-			case HASH:
-				result = -EINVAL;
-				goto err_audit;
-			case AUDIT:
-				if (!may_set_audit_rule_in_ns(current_uid(),
-							      user_ns)) {
-					result = -EPERM;
-					goto err_audit;
-				}
-			}
-		}
+		// if (ns != &init_ima_ns && result == 0) {
+		// 	switch (entry->action) {
+		// 	case MEASURE:
+		// 	case APPRAISE:
+		// 	case HASH:
+		// 		result = -EINVAL;
+		// 		goto err_audit;
+		// 	case AUDIT:
+		// 		if (!may_set_audit_rule_in_ns(current_uid(),
+		// 					      user_ns)) {
+		// 			result = -EPERM;
+		// 			goto err_audit;
+		// 		}
+		// 	}
+		// }
 	}
 	if (!result && !ima_validate_rule(entry))
 		result = -EINVAL;
