@@ -77,7 +77,7 @@ static int __init ima_add_boot_aggregate(struct ima_namespace *ns)
 		}
 	}
 
-	result = ima_alloc_init_template(&event_data, &entry, NULL);
+	result = ima_alloc_init_template(&event_data, &entry, NULL, 1);
 	if (result < 0) {
 		audit_cause = "alloc_entry";
 		goto err_out;
@@ -85,7 +85,7 @@ static int __init ima_add_boot_aggregate(struct ima_namespace *ns)
 
 	result = ima_store_template(ns, entry, violation, NULL,
 				    boot_aggregate_name,
-				    CONFIG_IMA_MEASURE_PCR_IDX);
+				    CONFIG_IMA_MEASURE_PCR_IDX, 1);
 	if (result < 0) {
 		ima_free_template_entry(entry);
 		audit_cause = "store_entry";

@@ -228,7 +228,7 @@ void ima_file_free(struct file *file)
 static int __process_measurement(struct ima_namespace *ns,
 				 struct file *file, const struct cred *cred,
 				 u32 secid, char *buf, loff_t size, int mask,
-				 enum ima_hooks func)
+				 enum ima_hooks func, int num_measurements)
 {
 	struct inode *inode = file_inode(file);
 	struct integrity_iint_cache *iint = NULL;
@@ -248,7 +248,7 @@ static int __process_measurement(struct ima_namespace *ns,
 	unsigned long flags;
 
 	if (!ns->ima_policy_flag || !S_ISREG(inode->i_mode))
-		return 0;
+		return 1;
 
 	/* Return an IMA_MEASURE, IMA_APPRAISE, IMA_AUDIT action
 	 * bitmask based on the appraise/audit/measurement policy.
@@ -257,11 +257,16 @@ static int __process_measurement(struct ima_namespace *ns,
 	action = ima_get_action(ns, file_mnt_user_ns(file), inode, cred, secid,
 				mask, func, &pcr, &template_desc, NULL,
 				&allowed_algos);
-	printk(KERN_DEBUG "action %d namespace %p ima_ns %p inode %p", action, file_mnt_user_ns(file), ns, inode);
+	if(file_mnt_user_ns(file)->ima_ns != ns && num_measurements > 1)
+		action |= IMA_MEASURE;
+	// if(file_mnt_user_ns(file)->ima_ns != ns && num_measurements == 1)
+	// 	action ^= IMA_MEASURE;
+	printk(KERN_DEBUG "action %d num_mes %d file ima_ns %p ima_ns %p inode %p", action, num_measurements, file_mnt_user_ns(file)->ima_ns, ns, inode);
 	violation_check = ((func == FILE_CHECK || func == MMAP_CHECK) &&
 			   (ns->ima_policy_flag & IMA_MEASURE));
-	if (!action && !violation_check)
-		return 0;
+	// if (!action && !violation_check)
+	if (!action)
+		return 1;
 
 	must_appraise = action & IMA_APPRAISE;
 
@@ -328,7 +333,7 @@ static int __process_measurement(struct ima_namespace *ns,
 	action &= ~((flags & (IMA_DONE_MASK ^ IMA_MEASURED)) >> 1);
 
 	/* If target pcr is already measured, unset IMA_MEASURE action */
-	if ((action & IMA_MEASURE) && (iint->measured_pcrs & (0x1 << pcr)))
+	if ((action & IMA_MEASURE) && (iint->measured_pcrs & (0x1 << pcr)) && (ima_lookup_digest_entry(ns, iint->ima_hash->digest, pcr)))
 		action ^= IMA_MEASURE;
 
 	/* HASH sets the digital signature and update flags, nothing else */
@@ -382,11 +387,12 @@ static int __process_measurement(struct ima_namespace *ns,
 
 	if (!pathbuf)	/* ima_rdwr_violation possibly pre-fetched */
 		pathname = ima_d_path(&file->f_path, &pathbuf, filename);
+	printk(KERN_DEBUG "pathname: %s", pathname);
 
 	if (action & IMA_MEASURE)
 		ima_store_measurement(ns, iint, file, pathname,
 				      xattr_value, xattr_len, modsig, pcr,
-				      template_desc);
+				      template_desc, num_measurements);
 	if (rc == 0 && (action & IMA_APPRAISE_SUBMASK)) {
 		rc = ima_check_blacklist(ns, iint, modsig, pcr);
 		if (rc != -EPERM) {
@@ -441,14 +447,19 @@ static int process_measurement(struct user_namespace *user_ns,
 {
 	struct ima_namespace *ns;
 	int ret = 0;
+	int num_measurements = 0;
 
 	while (user_ns) {
 		ns = ima_ns_from_user_ns(user_ns);
 		if (ns_is_active(ns)) {
 			int rc;
-
+			num_measurements++;
 			rc = __process_measurement(ns, file, cred, secid, buf,
-						   size, mask, func);
+						   size, mask, func, num_measurements);
+			if(rc == 1)
+			{
+				break;
+			}
 			switch (rc) {
 			case 0:
 				break;
@@ -1066,14 +1077,14 @@ int process_buffer_measurement(struct ima_namespace *ns,
 	if (!ns->ima_policy_flag || (func && !(action & IMA_MEASURE)))
 		return 1;
 
-	ret = ima_alloc_init_template(&event_data, &entry, template);
+	ret = ima_alloc_init_template(&event_data, &entry, template, 1);
 	if (ret < 0) {
 		audit_cause = "alloc_entry";
 		goto out;
 	}
 
 	ret = ima_store_template(ns, entry, violation, NULL, event_data.buf,
-				 pcr);
+				 pcr, 1);
 	if (ret < 0) {
 		audit_cause = "store_entry";
 		ima_free_template_entry(entry);

@@ -95,6 +95,7 @@ struct ima_template_desc {
 
 struct ima_template_entry {
 	int pcr;
+	int num_measurements;
 	struct tpm_digest *digests;
 	struct ima_template_desc *template_desc; /* template descriptor */
 	u32 template_data_len;
@@ -186,7 +187,11 @@ int ima_init_namespace(struct ima_namespace *ns);
 int ima_add_template_entry(struct ima_namespace *ns,
 			   struct ima_template_entry *entry, int violation,
 			   const char *op, struct inode *inode,
-			   const unsigned char *filename);
+			   const unsigned char *filename, int num_measurements);
+struct ima_queue_entry *ima_lookup_digest_entry
+						(struct ima_namespace *ns,
+						 u8 *digest_value,
+						 int pcr);
 int ima_calc_file_hash(struct file *file, struct ima_digest_data *hash);
 int ima_calc_buffer_hash(const void *buf, loff_t len,
 			 struct ima_digest_data *hash);
@@ -218,6 +223,7 @@ void ima_init_template_list(void);
 int __init ima_init_digests(void);
 int ima_lsm_policy_change(struct notifier_block *nb, unsigned long event,
 			  void *lsm_data);
+void print_util(unsigned char* to_be_printed, unsigned int length, char* string_before);
 
 /*
  * used to protect h_table and sha_table
@@ -314,7 +320,7 @@ void ima_store_measurement(struct ima_namespace *ns,
 			   const unsigned char *filename,
 			   struct evm_ima_xattr_data *xattr_value,
 			   int xattr_len, const struct modsig *modsig, int pcr,
-			   struct ima_template_desc *template_desc);
+			   struct ima_template_desc *template_desc, int num_measurements);
 int process_buffer_measurement(struct ima_namespace *ns,
 			       struct user_namespace *mnt_userns,
 			       struct inode *inode, const void *buf, int size,
@@ -326,11 +332,11 @@ void ima_audit_measurement(struct integrity_iint_cache *iint,
 			   struct ns_status *ns_status);
 int ima_alloc_init_template(struct ima_event_data *event_data,
 			    struct ima_template_entry **entry,
-			    struct ima_template_desc *template_desc);
+			    struct ima_template_desc *template_desc, int num_measurements);
 int ima_store_template(struct ima_namespace *ns,
 		       struct ima_template_entry *entry, int violation,
 		       struct inode *inode,
-		       const unsigned char *filename, int pcr);
+		       const unsigned char *filename, int pcr, int num_measurements);
 void ima_free_template_entry(struct ima_template_entry *entry);
 const char *ima_d_path(const struct path *path, char **pathbuf, char *filename);
 

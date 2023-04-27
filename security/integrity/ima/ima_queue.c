@@ -31,7 +31,7 @@ static struct tpm_digest *digests;
 static DEFINE_MUTEX(ima_extend_list_mutex);
 
 /* lookup up the digest value in the hash table, and return the entry */
-static struct ima_queue_entry *ima_lookup_digest_entry
+struct ima_queue_entry *ima_lookup_digest_entry
 						(struct ima_namespace *ns,
 						 u8 *digest_value,
 						 int pcr)
@@ -154,7 +154,7 @@ static int ima_pcr_extend(struct tpm_digest *digests_arg, int pcr)
 int ima_add_template_entry(struct ima_namespace *ns,
 			   struct ima_template_entry *entry, int violation,
 			   const char *op, struct inode *inode,
-			   const unsigned char *filename)
+			   const unsigned char *filename, int num_measurements)
 {
 	u8 *digest = entry->digests[ima_hash_algo_idx].digest;
 	struct tpm_digest *digests_arg = entry->digests;
@@ -162,18 +162,28 @@ int ima_add_template_entry(struct ima_namespace *ns,
 	char tpm_audit_cause[AUDIT_CAUSE_LEN_MAX];
 	int audit_info = 1;
 	int result = 0, tpmresult = 0;
+	struct ima_queue_entry *entry_hash = ima_lookup_digest_entry(ns, digest, entry->pcr);
 
 	mutex_lock(&ima_extend_list_mutex);
 	if (!violation && !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE)) {
-		if (ima_lookup_digest_entry(ns, digest, entry->pcr)) {
-			audit_cause = "hash_exists";
-			result = -EEXIST;
-			goto out;
+		/* extension of a measure made in a namespace of a file arleady measured
+		in the host*/
+		if (entry_hash != NULL) {
+			if(num_measurements > 1 && entry_hash->entry->num_measurements == 1)
+			{
+				printk(KERN_DEBUG "entry measured added to list");
+				entry_hash->entry->num_measurements = num_measurements;
+				result = ima_add_digest_entry(ns, entry, false);
+				printk(KERN_DEBUG "store measurement %p inode %p \n\n", ns, inode);
+
+			}
+			goto check_result;
 		}
 	}
-	printk(KERN_DEBUG "about to store measurement %p inode %p \n\n", ns, inode);
 	result = ima_add_digest_entry(ns, entry,
 				      !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE));
+	printk(KERN_DEBUG "store measurement %p inode %p \n\n", ns, inode);
+check_result:
 	if (result < 0) {
 		audit_cause = "ENOMEM";
 		audit_info = 0;
