@@ -37,7 +37,7 @@ void ima_free_template_entry(struct ima_template_entry *entry)
  */
 int ima_alloc_init_template(struct ima_event_data *event_data,
 			    struct ima_template_entry **entry,
-			    struct ima_template_desc *desc, int num_measurements)
+			    struct ima_template_desc *desc, u32 num_measurements, u32 ima_ns_id)
 {
 	struct ima_template_desc *template_desc;
 	struct tpm_digest *digests;
@@ -64,6 +64,7 @@ int ima_alloc_init_template(struct ima_event_data *event_data,
 	(*entry)->digests = digests;
 	(*entry)->template_desc = template_desc;
 	(*entry)->num_measurements = num_measurements;
+	(*entry)->ima_ns_id = ima_ns_id;
 	for (i = 0; i < template_desc->num_fields; i++) {
 		const struct ima_template_field *field =
 			template_desc->fields[i];
@@ -104,7 +105,7 @@ out:
 int ima_store_template(struct ima_namespace *ns,
 		       struct ima_template_entry *entry,
 		       int violation, struct inode *inode,
-		       const unsigned char *filename, int pcr, int num_measurements)
+		       const unsigned char *filename, int pcr, u32 num_measurements)
 {
 	static const char op[] = "add_template_measure";
 	static const char audit_cause[] = "hashing_error";
@@ -152,7 +153,7 @@ void ima_add_violation(struct ima_namespace *ns,
 	/* can overflow, only indicator */
 	atomic_long_inc(&ns->ima_htable.violations);
 
-	result = ima_alloc_init_template(&event_data, &entry, NULL, 1);
+	result = ima_alloc_init_template(&event_data, &entry, NULL, 1, ns->id);
 	if (result < 0) {
 		result = -ENOMEM;
 		goto err_out;
@@ -358,7 +359,8 @@ void ima_store_measurement(struct ima_namespace *ns,
 			   struct file *file, const unsigned char *filename,
 			   struct evm_ima_xattr_data *xattr_value,
 			   int xattr_len, const struct modsig *modsig, int pcr,
-			   struct ima_template_desc *template_desc, int num_measurements)
+			   struct ima_template_desc *template_desc, u32 num_measurements,
+			   int starting_ima_ns_id)
 {
 	static const char op[] = "add_template_measure";
 	static const char audit_cause[] = "ENOMEM";
@@ -370,7 +372,9 @@ void ima_store_measurement(struct ima_namespace *ns,
 					     .filename = filename,
 					     .xattr_value = xattr_value,
 					     .xattr_len = xattr_len,
-					     .modsig = modsig };
+					     .modsig = modsig,
+						 .num_measurements = num_measurements,
+						 .ima_ns_id = starting_ima_ns_id };
 	int violation = 0;
 
 	/*
@@ -382,7 +386,7 @@ void ima_store_measurement(struct ima_namespace *ns,
 	if (iint->measured_pcrs & (0x1 << pcr) && !modsig && (ima_lookup_digest_entry(ns, iint->ima_hash->digest, pcr)))
 		return;
 
-	result = ima_alloc_init_template(&event_data, &entry, template_desc, num_measurements);
+	result = ima_alloc_init_template(&event_data, &entry, template_desc, num_measurements, starting_ima_ns_id);
 	if (result < 0) {
 		integrity_audit_msg(AUDIT_INTEGRITY_PCR, inode, filename,
 				    op, audit_cause, result, 0);

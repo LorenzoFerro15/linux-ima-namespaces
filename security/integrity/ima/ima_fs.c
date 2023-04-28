@@ -247,8 +247,6 @@ static int ima_ascii_measurements_show(struct seq_file *m, void *v)
 
 	/* 1st: PCR used (config option) */
 	seq_printf(m, "%2d ", e->pcr);
-	// how many times the measure has been extended
-	seq_printf(m, "%2d ", e->num_measurements);
 
 	/* 2nd: SHA1 template hash */
 	ima_print_digest(m, e->digests[ima_sha1_idx].digest, TPM_DIGEST_SIZE);

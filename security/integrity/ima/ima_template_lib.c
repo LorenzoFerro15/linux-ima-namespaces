@@ -27,7 +27,7 @@ enum data_formats {
 	DATA_FMT_DIGEST_WITH_TYPE_AND_ALGO,
 	DATA_FMT_STRING,
 	DATA_FMT_HEX,
-	DATA_FMT_UINT
+	DATA_FMT_UINT,
 };
 
 enum digest_type {
@@ -222,6 +222,13 @@ void ima_show_template_uint(struct seq_file *m, enum ima_show_type show,
 			    struct ima_field_data *field_data)
 {
 	ima_show_template_field_data(m, show, DATA_FMT_UINT, field_data);
+}
+
+void ima_show_template_id(struct seq_file *m, enum ima_show_type show,
+				 struct ima_field_data *field_data)
+{
+	ima_show_template_field_data(m, show, DATA_FMT_UINT,
+				     field_data);
 }
 
 /**
@@ -743,4 +750,24 @@ int ima_eventinodexattrvalues_init(struct ima_event_data *event_data,
 				   struct ima_field_data *field_data)
 {
 	return ima_eventinodexattrs_init_common(event_data, field_data, 'v');
+}
+
+int ima_id_init(struct ima_event_data *event_data,
+			    struct ima_field_data *field_data)
+{
+	u32 ima_id = event_data->ima_ns_id;
+
+	return ima_write_template_field_data((char *)&ima_id, sizeof(ima_id),
+					     DATA_FMT_UINT, field_data);
+
+}
+
+int ima_num_mes_init(struct ima_event_data *event_data,
+			    struct ima_field_data *field_data)
+{
+	u32 num_mes = event_data->num_measurements;
+
+	return ima_write_template_field_data((char *)&num_mes, sizeof(num_mes),
+					     DATA_FMT_UINT, field_data);
+
 }

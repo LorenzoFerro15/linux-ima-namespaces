@@ -26,7 +26,7 @@ static struct ima_template_desc builtin_templates[] = {
 	{.name = "ima-modsig", .fmt = "d-ng|n-ng|sig|d-modsig|modsig"},
 	{.name = "evm-sig",
 	 .fmt = "d-ng|n-ng|evmsig|xattrnames|xattrlengths|xattrvalues|iuid|igid|imode"},
-	{.name = "", .fmt = ""},	/* placeholder for a custom format */
+	{.name = "ima-id", .fmt = "d-ng|n-ng|id|num_mes"},
 };
 
 static LIST_HEAD(defined_templates);
@@ -69,6 +69,12 @@ static const struct ima_template_field supported_fields[] = {
 	{.field_id = "xattrvalues",
 	 .field_init = ima_eventinodexattrvalues_init,
 	 .field_show = ima_show_template_sig},
+	{.field_id = "id",
+	 .field_init = ima_id_init,
+	 .field_show = ima_show_template_id},
+	{.field_id = "num_mes",
+	 .field_init = ima_num_mes_init,
+	 .field_show = ima_show_template_id},
 };
 
 /*

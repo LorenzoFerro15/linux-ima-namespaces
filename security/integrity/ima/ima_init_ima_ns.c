@@ -11,6 +11,7 @@
 int ima_init_namespace(struct ima_namespace *ns)
 {
 	int ret;
+	int tmp_rand;
 
 	ns->ns_status_tree = RB_ROOT;
 	rwlock_init(&ns->ns_tree_lock);
@@ -23,6 +24,11 @@ int ima_init_namespace(struct ima_namespace *ns)
 	ns->ima_rules = (struct list_head __rcu *)(&ns->ima_default_rules);
 	ns->ima_policy_flag = 0;
 	ns->arch_policy_entry = NULL;
+	get_random_bytes(&tmp_rand, sizeof(int));
+	if(tmp_rand < 0)
+		tmp_rand *= -1;
+	printk(KERN_DEBUG "random bytes: %d", tmp_rand);
+	ns->id = tmp_rand % (512*512);
 
 	atomic_long_set(&ns->ima_htable.len, 0);
 	atomic_long_set(&ns->ima_htable.violations, 0);

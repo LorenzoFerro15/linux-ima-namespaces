@@ -44,6 +44,8 @@ enum tpm_pcrs { TPM_PCR0 = 0, TPM_PCR8 = 8, TPM_PCR10 = 10 };
 
 #define NR_BANKS(chip) ((chip != NULL) ? chip->nr_allocated_banks : 0)
 
+#define MAX_REMEASURE 128
+
 /* bitset of digests algorithms allowed in the setxattr hook */
 extern atomic_t ima_setxattr_allowed_hash_algorithms;
 
@@ -67,6 +69,8 @@ struct ima_event_data {
 	const char *violation;
 	const void *buf;
 	int buf_len;
+	u32 num_measurements;
+	u32 ima_ns_id;
 };
 
 /* IMA template field data definition */
@@ -95,7 +99,8 @@ struct ima_template_desc {
 
 struct ima_template_entry {
 	int pcr;
-	int num_measurements;
+	u32 num_measurements;
+	u32 ima_ns_id;
 	struct tpm_digest *digests;
 	struct ima_template_desc *template_desc; /* template descriptor */
 	u32 template_data_len;
@@ -106,6 +111,8 @@ struct ima_queue_entry {
 	struct hlist_node hnext;	/* place in hash collision list */
 	struct list_head later;		/* place in ima_measurements list */
 	struct ima_template_entry *entry;
+	int list_of_ima_id[MAX_REMEASURE];
+	int list_length;
 };
 
 /* Some details preceding the binary serialized measurement list */
@@ -128,6 +135,8 @@ struct ima_namespace {
 /* Bit numbers for above flags; use BIT() to get flag */
 #define IMA_NS_LSM_UPDATE_RULES		0
 #define IMA_NS_ACTIVE			1
+
+	int id;
 
 	struct rb_root ns_status_tree;
 	rwlock_t ns_tree_lock;
@@ -187,7 +196,7 @@ int ima_init_namespace(struct ima_namespace *ns);
 int ima_add_template_entry(struct ima_namespace *ns,
 			   struct ima_template_entry *entry, int violation,
 			   const char *op, struct inode *inode,
-			   const unsigned char *filename, int num_measurements);
+			   const unsigned char *filename, u32 num_measurements);
 struct ima_queue_entry *ima_lookup_digest_entry
 						(struct ima_namespace *ns,
 						 u8 *digest_value,
@@ -320,7 +329,8 @@ void ima_store_measurement(struct ima_namespace *ns,
 			   const unsigned char *filename,
 			   struct evm_ima_xattr_data *xattr_value,
 			   int xattr_len, const struct modsig *modsig, int pcr,
-			   struct ima_template_desc *template_desc, int num_measurements);
+			   struct ima_template_desc *template_desc, u32 num_measurements,
+			   int starting_ima_ns_id);
 int process_buffer_measurement(struct ima_namespace *ns,
 			       struct user_namespace *mnt_userns,
 			       struct inode *inode, const void *buf, int size,
@@ -332,11 +342,12 @@ void ima_audit_measurement(struct integrity_iint_cache *iint,
 			   struct ns_status *ns_status);
 int ima_alloc_init_template(struct ima_event_data *event_data,
 			    struct ima_template_entry **entry,
-			    struct ima_template_desc *template_desc, int num_measurements);
+			    struct ima_template_desc *template_desc, u32 num_measurements, 
+				u32 ima_ns_id);
 int ima_store_template(struct ima_namespace *ns,
 		       struct ima_template_entry *entry, int violation,
 		       struct inode *inode,
-		       const unsigned char *filename, int pcr, int num_measurements);
+		       const unsigned char *filename, int pcr, u32 num_measurements);
 void ima_free_template_entry(struct ima_template_entry *entry);
 const char *ima_d_path(const struct path *path, char **pathbuf, char *filename);
 
@@ -557,6 +568,12 @@ static inline struct ima_namespace
 {
 	/* Pairs with smp_store_releases() in user_ns_set_ima_ns(). */
 	return smp_load_acquire(&user_ns->ima_ns);
+}
+
+static inline u32 ima_ns_id_from_user_ns(struct user_namespace *user_ns)
+{
+	struct ima_namespace *ima_ns = ima_ns_from_user_ns(user_ns);
+	return ima_ns->id;
 }
 
 static inline void user_ns_set_ima_ns(struct user_namespace *user_ns,

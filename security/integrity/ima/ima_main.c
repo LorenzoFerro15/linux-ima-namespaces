@@ -228,7 +228,7 @@ void ima_file_free(struct file *file)
 static int __process_measurement(struct ima_namespace *ns,
 				 struct file *file, const struct cred *cred,
 				 u32 secid, char *buf, loff_t size, int mask,
-				 enum ima_hooks func, int num_measurements)
+				 enum ima_hooks func, u32 num_measurements, int starting_ima_ns_id)
 {
 	struct inode *inode = file_inode(file);
 	struct integrity_iint_cache *iint = NULL;
@@ -250,6 +250,9 @@ static int __process_measurement(struct ima_namespace *ns,
 	if (!ns->ima_policy_flag || !S_ISREG(inode->i_mode))
 		return 1;
 
+	if(starting_ima_ns_id == 0)
+		return 1;
+
 	/* Return an IMA_MEASURE, IMA_APPRAISE, IMA_AUDIT action
 	 * bitmask based on the appraise/audit/measurement policy.
 	 * Included is the appraise submask.
@@ -261,7 +264,7 @@ static int __process_measurement(struct ima_namespace *ns,
 		action |= IMA_MEASURE;
 	// if(file_mnt_user_ns(file)->ima_ns != ns && num_measurements == 1)
 	// 	action ^= IMA_MEASURE;
-	printk(KERN_DEBUG "action %d num_mes %d file ima_ns %p ima_ns %p inode %p", action, num_measurements, file_mnt_user_ns(file)->ima_ns, ns, inode);
+	printk(KERN_DEBUG "action %d num_mes %d file ima_ns %p ima_ns %p ima_id %d inode %p", action, num_measurements, file_mnt_user_ns(file)->ima_ns, ns, ns->id, inode);
 	violation_check = ((func == FILE_CHECK || func == MMAP_CHECK) &&
 			   (ns->ima_policy_flag & IMA_MEASURE));
 	// if (!action && !violation_check)
@@ -392,7 +395,7 @@ static int __process_measurement(struct ima_namespace *ns,
 	if (action & IMA_MEASURE)
 		ima_store_measurement(ns, iint, file, pathname,
 				      xattr_value, xattr_len, modsig, pcr,
-				      template_desc, num_measurements);
+				      template_desc, num_measurements, starting_ima_ns_id);
 	if (rc == 0 && (action & IMA_APPRAISE_SUBMASK)) {
 		rc = ima_check_blacklist(ns, iint, modsig, pcr);
 		if (rc != -EPERM) {
@@ -447,7 +450,21 @@ static int process_measurement(struct user_namespace *user_ns,
 {
 	struct ima_namespace *ns;
 	int ret = 0;
-	int num_measurements = 0;
+	u32 num_measurements = 0;
+	int starting_ima_ns_id = 0;
+	struct ima_namespace *starting_ima_ns;
+	struct user_namespace *father = user_ns;
+	
+	if(user_ns != NULL)
+	{
+		starting_ima_ns = ima_ns_from_user_ns(user_ns);
+		while(starting_ima_ns == NULL) 
+		{
+			starting_ima_ns = ima_ns_from_user_ns(father->parent);
+			father = father->parent;
+		}
+		starting_ima_ns_id = starting_ima_ns->id;
+	}
 
 	while (user_ns) {
 		ns = ima_ns_from_user_ns(user_ns);
@@ -455,7 +472,7 @@ static int process_measurement(struct user_namespace *user_ns,
 			int rc;
 			num_measurements++;
 			rc = __process_measurement(ns, file, cred, secid, buf,
-						   size, mask, func, num_measurements);
+						   size, mask, func, num_measurements, starting_ima_ns_id);
 			if(rc == 1)
 			{
 				break;
@@ -1077,7 +1094,7 @@ int process_buffer_measurement(struct ima_namespace *ns,
 	if (!ns->ima_policy_flag || (func && !(action & IMA_MEASURE)))
 		return 1;
 
-	ret = ima_alloc_init_template(&event_data, &entry, template, 1);
+	ret = ima_alloc_init_template(&event_data, &entry, template, 1, ns->id);
 	if (ret < 0) {
 		audit_cause = "alloc_entry";
 		goto out;
