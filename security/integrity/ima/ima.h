@@ -99,8 +99,6 @@ struct ima_template_desc {
 
 struct ima_template_entry {
 	int pcr;
-	u32 num_measurements;
-	u32 ima_ns_id;
 	struct tpm_digest *digests;
 	struct ima_template_desc *template_desc; /* template descriptor */
 	u32 template_data_len;
@@ -196,7 +194,7 @@ int ima_init_namespace(struct ima_namespace *ns);
 int ima_add_template_entry(struct ima_namespace *ns,
 			   struct ima_template_entry *entry, int violation,
 			   const char *op, struct inode *inode,
-			   const unsigned char *filename, u32 num_measurements);
+			   const unsigned char *filename);
 struct ima_queue_entry *ima_lookup_digest_entry
 						(struct ima_namespace *ns,
 						 u8 *digest_value,
@@ -342,12 +340,11 @@ void ima_audit_measurement(struct integrity_iint_cache *iint,
 			   struct ns_status *ns_status);
 int ima_alloc_init_template(struct ima_event_data *event_data,
 			    struct ima_template_entry **entry,
-			    struct ima_template_desc *template_desc, u32 num_measurements, 
-				u32 ima_ns_id);
+			    struct ima_template_desc *template_desc);
 int ima_store_template(struct ima_namespace *ns,
 		       struct ima_template_entry *entry, int violation,
 		       struct inode *inode,
-		       const unsigned char *filename, int pcr, u32 num_measurements);
+		       const unsigned char *filename, int pcr);
 void ima_free_template_entry(struct ima_template_entry *entry);
 const char *ima_d_path(const struct path *path, char **pathbuf, char *filename);
 

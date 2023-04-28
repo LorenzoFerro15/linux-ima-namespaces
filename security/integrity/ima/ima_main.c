@@ -262,8 +262,6 @@ static int __process_measurement(struct ima_namespace *ns,
 				&allowed_algos);
 	if(file_mnt_user_ns(file)->ima_ns != ns && num_measurements > 1)
 		action |= IMA_MEASURE;
-	// if(file_mnt_user_ns(file)->ima_ns != ns && num_measurements == 1)
-	// 	action ^= IMA_MEASURE;
 	printk(KERN_DEBUG "action %d num_mes %d file ima_ns %p ima_ns %p ima_id %d inode %p", action, num_measurements, file_mnt_user_ns(file)->ima_ns, ns, ns->id, inode);
 	violation_check = ((func == FILE_CHECK || func == MMAP_CHECK) &&
 			   (ns->ima_policy_flag & IMA_MEASURE));
@@ -1101,7 +1099,7 @@ int process_buffer_measurement(struct ima_namespace *ns,
 	}
 
 	ret = ima_store_template(ns, entry, violation, NULL, event_data.buf,
-				 pcr, 1);
+				 pcr);
 	if (ret < 0) {
 		audit_cause = "store_entry";
 		ima_free_template_entry(entry);

@@ -37,7 +37,7 @@ void ima_free_template_entry(struct ima_template_entry *entry)
  */
 int ima_alloc_init_template(struct ima_event_data *event_data,
 			    struct ima_template_entry **entry,
-			    struct ima_template_desc *desc, u32 num_measurements, u32 ima_ns_id)
+			    struct ima_template_desc *desc)
 {
 	struct ima_template_desc *template_desc;
 	struct tpm_digest *digests;
@@ -63,8 +63,6 @@ int ima_alloc_init_template(struct ima_event_data *event_data,
 
 	(*entry)->digests = digests;
 	(*entry)->template_desc = template_desc;
-	(*entry)->num_measurements = num_measurements;
-	(*entry)->ima_ns_id = ima_ns_id;
 	for (i = 0; i < template_desc->num_fields; i++) {
 		const struct ima_template_field *field =
 			template_desc->fields[i];
@@ -105,7 +103,7 @@ out:
 int ima_store_template(struct ima_namespace *ns,
 		       struct ima_template_entry *entry,
 		       int violation, struct inode *inode,
-		       const unsigned char *filename, int pcr, u32 num_measurements)
+		       const unsigned char *filename, int pcr)
 {
 	static const char op[] = "add_template_measure";
 	static const char audit_cause[] = "hashing_error";
@@ -125,7 +123,7 @@ int ima_store_template(struct ima_namespace *ns,
 	print_util(entry->template_data[0].data, entry->template_data[0].len, "value of hash calculated: ");
 	entry->pcr = pcr;
 	result = ima_add_template_entry(ns, entry, violation, op, inode,
-					filename, num_measurements);
+					filename);
 	return result;
 }
 
@@ -159,7 +157,7 @@ void ima_add_violation(struct ima_namespace *ns,
 		goto err_out;
 	}
 	result = ima_store_template(ns, entry, violation, inode,
-				    filename, CONFIG_IMA_MEASURE_PCR_IDX, 1);
+				    filename, CONFIG_IMA_MEASURE_PCR_IDX);
 	if (result < 0)
 		ima_free_template_entry(entry);
 err_out:
@@ -386,14 +384,14 @@ void ima_store_measurement(struct ima_namespace *ns,
 	if (iint->measured_pcrs & (0x1 << pcr) && !modsig && (ima_lookup_digest_entry(ns, iint->ima_hash->digest, pcr)))
 		return;
 
-	result = ima_alloc_init_template(&event_data, &entry, template_desc, num_measurements, starting_ima_ns_id);
+	result = ima_alloc_init_template(&event_data, &entry, template_desc);
 	if (result < 0) {
 		integrity_audit_msg(AUDIT_INTEGRITY_PCR, inode, filename,
 				    op, audit_cause, result, 0);
 		return;
 	}
 
-	result = ima_store_template(ns, entry, violation, inode, filename, pcr, num_measurements);
+	result = ima_store_template(ns, entry, violation, inode, filename, pcr);
 	/* change the value of the integrity data associated with the inode only only if in
 	the init_ima_ns */
 	if ((!result || result == -EEXIST) && !(file->f_flags & O_DIRECT)) {

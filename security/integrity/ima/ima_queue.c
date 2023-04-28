@@ -54,26 +54,6 @@ struct ima_queue_entry *ima_lookup_digest_entry
 	return ret;
 }
 
-/* check if the entry is contained in the list of ima_ns_id that effettuated the measure
-   in case not contained add it
-*/
-bool __contains_id_entry_and_add(struct ima_queue_entry *entry_hash, u32 ima_ns_id)
-{
-	int i;
-	if(entry_hash == NULL)
-		return false;
-	for (i = 0; i < entry_hash->list_length; i++)
-	{
-		if(entry_hash->list_of_ima_id[i] == ima_ns_id)
-			return true;
-	}
-
-	entry_hash->list_of_ima_id[entry_hash->list_length++] = ima_ns_id;
-	return false;
-	
-}
-
-
 /*
  * Calculate the memory required for serializing a single
  * binary_runtime_measurement list entry, which contains a
@@ -177,7 +157,7 @@ static int ima_pcr_extend(struct tpm_digest *digests_arg, int pcr)
 int ima_add_template_entry(struct ima_namespace *ns,
 			   struct ima_template_entry *entry, int violation,
 			   const char *op, struct inode *inode,
-			   const unsigned char *filename, u32 num_measurements)
+			   const unsigned char *filename)
 {
 	u8 *digest = entry->digests[ima_hash_algo_idx].digest;
 	struct tpm_digest *digests_arg = entry->digests;
@@ -188,24 +168,20 @@ int ima_add_template_entry(struct ima_namespace *ns,
 	struct ima_queue_entry *entry_hash = ima_lookup_digest_entry(ns, digest, entry->pcr);
 
 	mutex_lock(&ima_extend_list_mutex);
-	if (!violation && !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE)) {
-		/* extension of a measure made in a namespace of a file arleady measured
-		in the host*/
-		if (entry_hash != NULL) {
-			if(!__contains_id_entry_and_add(entry_hash, entry->ima_ns_id))
-			{
-				printk(KERN_DEBUG "entry measured added to list");
-				result = ima_add_digest_entry(ns, entry, false);
-				printk(KERN_DEBUG "store measurement %p inode %p \n\n", ns, inode);
-
-			}
-			goto check_result;
+	if (!violation && !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE)) 
+	{
+		if (ima_lookup_digest_entry(ns, digest, entry->pcr)) 
+		{
+			audit_cause = "hash_exists";
+			result = -EEXIST;
+			goto out;
 		}
 	}
+
 	result = ima_add_digest_entry(ns, entry,
 				      !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE));
 	printk(KERN_DEBUG "store measurement %p inode %p \n\n", ns, inode);
-check_result:
+
 	if (result < 0) {
 		audit_cause = "ENOMEM";
 		audit_info = 0;
