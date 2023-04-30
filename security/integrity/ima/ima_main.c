@@ -1092,7 +1092,7 @@ int process_buffer_measurement(struct ima_namespace *ns,
 	if (!ns->ima_policy_flag || (func && !(action & IMA_MEASURE)))
 		return 1;
 
-	ret = ima_alloc_init_template(&event_data, &entry, template, 1, ns->id);
+	ret = ima_alloc_init_template(&event_data, &entry, template);
 	if (ret < 0) {
 		audit_cause = "alloc_entry";
 		goto out;

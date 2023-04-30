@@ -93,8 +93,6 @@ static int ima_add_digest_entry(struct ima_namespace *ns,
 	qe->entry = entry;
 	qe->list_length = 0;
 
-	qe->list_of_ima_id[qe->list_length++] = entry->ima_ns_id;
-
 	INIT_LIST_HEAD(&qe->later);
 	list_add_tail_rcu(&qe->later, &ns->ima_measurements);
 
@@ -165,7 +163,6 @@ int ima_add_template_entry(struct ima_namespace *ns,
 	char tpm_audit_cause[AUDIT_CAUSE_LEN_MAX];
 	int audit_info = 1;
 	int result = 0, tpmresult = 0;
-	struct ima_queue_entry *entry_hash = ima_lookup_digest_entry(ns, digest, entry->pcr);
 
 	mutex_lock(&ima_extend_list_mutex);
 	if (!violation && !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE)) 

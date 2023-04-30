@@ -77,7 +77,7 @@ static int __init ima_add_boot_aggregate(struct ima_namespace *ns)
 		}
 	}
 
-	result = ima_alloc_init_template(&event_data, &entry, NULL, 1, ns->id);
+	result = ima_alloc_init_template(&event_data, &entry, NULL);
 	if (result < 0) {
 		audit_cause = "alloc_entry";
 		goto err_out;
