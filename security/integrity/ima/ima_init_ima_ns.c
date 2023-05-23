@@ -8,6 +8,8 @@
 
 #include "ima.h"
 
+int counter_ns = 0;
+
 int ima_init_namespace(struct ima_namespace *ns)
 {
 	int ret;
@@ -23,6 +25,8 @@ int ima_init_namespace(struct ima_namespace *ns)
 	ns->ima_rules = (struct list_head __rcu *)(&ns->ima_default_rules);
 	ns->ima_policy_flag = 0;
 	ns->arch_policy_entry = NULL;
+
+	ns->id = ++counter_ns;
 
 	atomic_long_set(&ns->ima_htable.len, 0);
 	atomic_long_set(&ns->ima_htable.violations, 0);

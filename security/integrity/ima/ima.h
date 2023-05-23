@@ -67,6 +67,7 @@ struct ima_event_data {
 	const char *violation;
 	const void *buf;
 	int buf_len;
+	u32 ima_ns_id;
 };
 
 /* IMA template field data definition */
@@ -127,6 +128,8 @@ struct ima_namespace {
 /* Bit numbers for above flags; use BIT() to get flag */
 #define IMA_NS_LSM_UPDATE_RULES		0
 #define IMA_NS_ACTIVE			1
+
+	int id; // identifier of the ima namespace
 
 	struct rb_root ns_status_tree;
 	rwlock_t ns_tree_lock;
