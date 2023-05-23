@@ -36,6 +36,8 @@ enum digest_type {
 	DIGEST_TYPE__LAST
 };
 
+#define MAX_LEN_ID 10
+
 #define DIGEST_TYPE_NAME_LEN_MAX 7	/* including NUL */
 static const char * const digest_type_name[DIGEST_TYPE__LAST] = {
 	[DIGEST_TYPE_IMA] = "ima",
@@ -743,4 +745,43 @@ int ima_eventinodexattrvalues_init(struct ima_event_data *event_data,
 				   struct ima_field_data *field_data)
 {
 	return ima_eventinodexattrs_init_common(event_data, field_data, 'v');
+}
+
+int ima_id_creator_init(struct ima_event_data *event_data,
+			    struct ima_field_data *field_data)
+{
+	u32 id_creator = event_data->ima_ns_id;
+	char string[MAX_LEN_ID];
+
+	sprintf(string, "%u", id_creator);
+
+	return ima_write_template_field_data(string, strlen(string),
+					     DATA_FMT_UINT, field_data);
+
+}
+
+int ima_id_created_init(struct ima_event_data *event_data,
+			    struct ima_field_data *field_data)
+{
+	u32 id_created = event_data->ima_ns_id2;
+	char string[MAX_LEN_ID];
+
+	sprintf(string, "%u", id_created);
+
+	return ima_write_template_field_data(string, strlen(string),
+					     DATA_FMT_UINT, field_data);
+
+}
+
+int ima_event_info_init(struct ima_event_data *event_data,
+			    struct ima_field_data *field_data)
+{
+	u32 event_info = event_data->event_info;
+	char string[MAX_LEN_ID];
+
+	sprintf(string, "%u", event_info);
+
+	return ima_write_template_field_data(string, strlen(string),
+					     DATA_FMT_UINT, field_data);
+
 }

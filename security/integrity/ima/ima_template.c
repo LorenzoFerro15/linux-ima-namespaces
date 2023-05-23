@@ -26,7 +26,7 @@ static struct ima_template_desc builtin_templates[] = {
 	{.name = "ima-modsig", .fmt = "d-ng|n-ng|sig|d-modsig|modsig"},
 	{.name = "evm-sig",
 	 .fmt = "d-ng|n-ng|evmsig|xattrnames|xattrlengths|xattrvalues|iuid|igid|imode"},
-	{.name = "", .fmt = ""},	/* placeholder for a custom format */
+	{.name = "ns-event", .fmt = "imaeveninfo|imaidcreator|imaidcreated"},	// creation of namespace event
 };
 
 static LIST_HEAD(defined_templates);
@@ -69,12 +69,15 @@ static const struct ima_template_field supported_fields[] = {
 	{.field_id = "xattrvalues",
 	 .field_init = ima_eventinodexattrvalues_init,
 	 .field_show = ima_show_template_sig},
-	{.field_id = "imaidstart",
-	 .field_init = ima_eventinodexattrvalues_init,
-	 .field_show = ima_show_template_sig},
-	{.field_id = "imaidmes",
-	 .field_init = ima_eventinodexattrvalues_init,
-	 .field_show = ima_show_template_sig},
+	{.field_id = "imaidcreator",
+	 .field_init = ima_id_creator_init,
+	 .field_show = ima_show_template_string},
+	{.field_id = "imaidcreated",
+	 .field_init = ima_id_created_init,
+	 .field_show = ima_show_template_string},
+	{.field_id = "imaeveninfo",
+	 .field_init = ima_event_info_init,
+	 .field_show = ima_show_template_string},
 };
 
 /*

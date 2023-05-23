@@ -68,6 +68,8 @@ struct ima_event_data {
 	const void *buf;
 	int buf_len;
 	u32 ima_ns_id;
+	u32 ima_ns_id2;  
+	u32 event_info; // 0 creation of a namespace 1 delete of the namespace
 };
 
 /* IMA template field data definition */
