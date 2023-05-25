@@ -211,6 +211,7 @@ int template_desc_init_fields(const char *template_fmt,
 struct ima_template_desc *ima_template_desc_current(void);
 struct ima_template_desc *ima_template_desc_buf(void);
 struct ima_template_desc *lookup_template_desc(const char *name);
+const struct ima_template_field *lookup_template_field(const char *field_id);
 bool ima_template_has_modsig(const struct ima_template_desc *ima_template);
 int ima_restore_measurement_entry(struct ima_namespace *ns,
 				  struct ima_template_entry *entry);
@@ -320,6 +321,8 @@ void ima_store_measurement(struct ima_namespace *ns,
 			   struct evm_ima_xattr_data *xattr_value,
 			   int xattr_len, const struct modsig *modsig, int pcr,
 			   struct ima_template_desc *template_desc);
+void ima_ns_event(struct ima_namespace *ns_creator, 
+				struct ima_namespace *ns_created, int event_info, struct ima_namespace *ns_to_extend);
 int process_buffer_measurement(struct ima_namespace *ns,
 			       struct user_namespace *mnt_userns,
 			       struct inode *inode, const void *buf, int size,

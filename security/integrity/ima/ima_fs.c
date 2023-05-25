@@ -495,12 +495,17 @@ static ssize_t ima_write_active(struct file *filp,
 				const char __user *buf,
 				size_t count, loff_t *ppos)
 {
-	struct ima_namespace *ns = ima_ns_from_file(filp);
+	struct user_namespace *user_ns_created = ima_user_ns_from_file(filp);
+	struct ima_namespace *ima_ns_created = ima_ns_from_user_ns(user_ns_created);
+	struct user_namespace *user_ns_creator = user_ns_created->parent;
+	struct ima_namespace *ima_ns_creator = ima_ns_from_user_ns(user_ns_creator);
+	struct ima_namespace *ima_ns_to_extend;
+	struct user_namespace *to_extend = user_ns_created;
 	unsigned int active;
 	char *kbuf;
 	int err;
 
-	if (ns_is_active(ns))
+	if (ns_is_active(ima_ns_created))
 		return -EBUSY;
 
 	/* accepting '1\n' and '1\0' and no partial writes */
@@ -519,9 +524,22 @@ static ssize_t ima_write_active(struct file *filp,
 	if (active != 1)
 		return -EINVAL;
 
-	err = ima_init_namespace(ns);
+	err = ima_init_namespace(ima_ns_created);
 	if (err)
 		return -EINVAL;
+	
+	/* add the entry of the creation of a IMA namespace
+		the entry is also added in all the IMA namespace parents up to the host
+	*/
+	while(to_extend)
+	{
+		ima_ns_to_extend = ima_ns_from_user_ns(to_extend);
+		if(ima_ns_to_extend != NULL && ns_is_active(ima_ns_to_extend))
+			ima_ns_event(ima_ns_creator, ima_ns_created, 0, ima_ns_to_extend); 
+
+		to_extend = to_extend->parent;
+
+	}
 
 	return count;
 }

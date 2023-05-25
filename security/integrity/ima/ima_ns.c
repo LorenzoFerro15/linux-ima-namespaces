@@ -46,9 +46,24 @@ void ima_free_ima_ns(struct ima_namespace *ns)
 
 void free_ima_ns(struct user_namespace *user_ns)
 {
-	struct ima_namespace *ns = ima_ns_from_user_ns(user_ns);
+	struct user_namespace *parent_of_destroyed = user_ns->parent;
+	struct ima_namespace *ima_ns_to_destroy = ima_ns_from_user_ns(user_ns);
+	struct ima_namespace *ima_ns_parent_of_destroyed = ima_ns_from_user_ns(parent_of_destroyed);
+	struct user_namespace *to_extend = user_ns;
+	struct ima_namespace *ima_ns_to_extend;
 
-	ima_free_ima_ns(ns);
+	while(to_extend)
+	{
+		ima_ns_to_extend = ima_ns_from_user_ns(to_extend);
+		if(ima_ns_to_extend != NULL && ns_is_active(ima_ns_to_extend))
+			ima_ns_event(ima_ns_parent_of_destroyed, ima_ns_to_destroy, 1, ima_ns_to_extend); 
+
+		to_extend = to_extend->parent;
+
+	}
+
+
+	ima_free_ima_ns(ima_ns_to_destroy);
 
 	user_ns->ima_ns = NULL;
 }

@@ -458,3 +458,69 @@ const char *ima_d_path(const struct path *path, char **pathbuf, char *namebuf)
 
 	return pathname;
 }
+
+/*
+	Creation of a entry for the measurement list that indicates the creation of 
+	a new IMA namespace
+
+	The template is allocated here (ns-event), the entry is initiated.
+
+	template fields are
+	- event info that can be 0 in case of creation and 1 in case of destroy of a ima
+		namespace
+	- creator is the identifier of the IMA namespace parent 
+	- created is the identifier of IMA namespace created/destroyed
+
+	The template is inserted in the list.
+	The param ns_to_extend is used to specify the IMA namespace where to store the measure
+		of the creation of the IMA namespace
+*/
+void ima_ns_event(struct ima_namespace *ns_creator, struct ima_namespace *ns_created, int event_info, struct ima_namespace *ns_to_extend)
+{
+	int result = -ENOMEM;
+	char *template_name = "ns-event";
+	int template_num_fields = 3;
+	int pcr = 10;
+	char *template_fmt = "imaeveninfo|imaidcreator|imaidcreated";
+	struct ima_template_entry *entry;
+	struct ima_template_desc *template_desc = kzalloc(sizeof(struct ima_template_desc), GFP_NOFS);
+	struct ima_event_data *event_data = kzalloc(sizeof(struct ima_event_data), GFP_NOFS);
+	int violation = 0;
+	
+	const struct ima_template_field *info_ev = lookup_template_field("imaeveninfo");
+	const struct ima_template_field *creator = lookup_template_field("imaidcreator");
+	const struct ima_template_field *created = lookup_template_field("imaidcreated");
+
+	const struct ima_template_field **fields_const = 
+		(const struct ima_template_field**)kzalloc(template_num_fields *
+		 sizeof(struct ima_template_field*), GFP_NOFS);
+
+	fields_const[0] = info_ev;
+	fields_const[1] = creator;
+	fields_const[2] = created;
+
+	event_data->event_info = event_info;
+	event_data->ima_ns_id = ns_creator->id;
+	event_data->ima_ns_id2 = ns_created->id;
+
+	template_desc->fmt = kzalloc(sizeof(char)*(strlen(template_fmt)+1), GFP_NOFS);
+	strncpy(template_desc->fmt, template_fmt, strlen(template_fmt));
+
+	template_desc->name = kzalloc(sizeof(char)*(strlen(template_name)+1), GFP_NOFS);
+	strncpy(template_desc->name, template_name, strlen(template_name));
+
+	template_desc->num_fields = template_num_fields;
+
+	template_desc->fields = fields_const;
+
+	result = ima_alloc_init_template(event_data, &entry, template_desc);
+	if (result < 0)
+		return;
+
+
+	result = ima_store_template(ns_to_extend, entry, violation, NULL, NULL, pcr);
+	if (result < 0)
+		ima_free_template_entry(entry);
+
+	return;
+}

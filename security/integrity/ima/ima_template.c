@@ -186,7 +186,7 @@ struct ima_template_desc *lookup_template_desc(const char *name)
 	return found ? template_desc : NULL;
 }
 
-static const struct ima_template_field *
+const struct ima_template_field *
 lookup_template_field(const char *field_id)
 {
 	int i;
