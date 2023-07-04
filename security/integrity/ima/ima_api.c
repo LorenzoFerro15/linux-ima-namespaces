@@ -348,7 +348,8 @@ void ima_store_measurement(struct ima_namespace *ns,
 			   struct file *file, const unsigned char *filename,
 			   struct evm_ima_xattr_data *xattr_value,
 			   int xattr_len, const struct modsig *modsig, int pcr,
-			   struct ima_template_desc *template_desc)
+			   struct ima_template_desc *template_desc,
+			   u32 ima_ns_id2)
 {
 	static const char op[] = "add_template_measure";
 	static const char audit_cause[] = "ENOMEM";
@@ -360,7 +361,8 @@ void ima_store_measurement(struct ima_namespace *ns,
 					     .filename = filename,
 					     .xattr_value = xattr_value,
 					     .xattr_len = xattr_len,
-					     .modsig = modsig };
+					     .modsig = modsig,
+						 .ima_ns_id2 = ima_ns_id2 };
 	int violation = 0;
 
 	/*

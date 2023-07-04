@@ -27,6 +27,7 @@ static struct ima_template_desc builtin_templates[] = {
 	{.name = "evm-sig",
 	 .fmt = "d-ng|n-ng|evmsig|xattrnames|xattrlengths|xattrvalues|iuid|igid|imode"},
 	{.name = "ns-event", .fmt = "imaeveninfo|imaidcreator|imaidcreated"},	// creation of namespace event
+	{.name = "ima-id", .fmt = "d-ng|n-ng|imaidcreated"},	// creation of namespace event
 };
 
 static LIST_HEAD(defined_templates);

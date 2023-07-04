@@ -320,7 +320,7 @@ void ima_store_measurement(struct ima_namespace *ns,
 			   const unsigned char *filename,
 			   struct evm_ima_xattr_data *xattr_value,
 			   int xattr_len, const struct modsig *modsig, int pcr,
-			   struct ima_template_desc *template_desc);
+			   struct ima_template_desc *template_desc, u32 ima_ns_id2);
 void ima_ns_event(struct ima_namespace *ns_creator, 
 				struct ima_namespace *ns_created, int event_info, struct ima_namespace *ns_to_extend);
 int process_buffer_measurement(struct ima_namespace *ns,

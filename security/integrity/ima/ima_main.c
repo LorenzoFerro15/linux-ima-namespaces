@@ -38,6 +38,9 @@ int ima_appraise;
 int __ro_after_init ima_hash_algo = HASH_ALGO_SHA1;
 static int hash_setup_done;
 
+
+static DEFINE_MUTEX(atomic_parent_extension_mutex);
+
 static int __init hash_setup(char *str)
 {
 	struct ima_template_desc *template_desc = ima_template_desc_current();
@@ -228,7 +231,7 @@ void ima_file_free(struct file *file)
 static int __process_measurement(struct ima_namespace *ns,
 				 struct file *file, const struct cred *cred,
 				 u32 secid, char *buf, loff_t size, int mask,
-				 enum ima_hooks func)
+				 enum ima_hooks func, int id_ima_ns_creator)
 {
 	struct inode *inode = file_inode(file);
 	struct integrity_iint_cache *iint = NULL;
@@ -385,7 +388,7 @@ static int __process_measurement(struct ima_namespace *ns,
 	if (action & IMA_MEASURE)
 		ima_store_measurement(ns, iint, file, pathname,
 				      xattr_value, xattr_len, modsig, pcr,
-				      template_desc);
+				      template_desc, id_ima_ns_creator);
 	if (rc == 0 && (action & IMA_APPRAISE_SUBMASK)) {
 		rc = ima_check_blacklist(ns, iint, modsig, pcr);
 		if (rc != -EPERM) {
@@ -440,6 +443,9 @@ static int process_measurement(struct user_namespace *user_ns,
 {
 	struct ima_namespace *ns;
 	int ret = 0;
+	struct ima_namespace *starting_ima_ns = ima_ns_from_user_ns(user_ns);
+
+	mutex_lock(&atomic_parent_extension_mutex);
 
 	while (user_ns) {
 		ns = ima_ns_from_user_ns(user_ns);
@@ -447,7 +453,7 @@ static int process_measurement(struct user_namespace *user_ns,
 			int rc;
 
 			rc = __process_measurement(ns, file, cred, secid, buf,
-						   size, mask, func);
+						   size, mask, func, starting_ima_ns->id);
 			switch (rc) {
 			case 0:
 				break;
@@ -464,6 +470,8 @@ static int process_measurement(struct user_namespace *user_ns,
 
 		user_ns = user_ns->parent;
 	}
+
+	mutex_unlock(&atomic_parent_extension_mutex);
 
 	return ret;
 }
