@@ -1099,7 +1099,7 @@ int process_buffer_measurement(struct ima_namespace *ns,
 	}
 
 	ret = ima_store_template(ns, entry, violation, NULL, event_data.buf,
-				 pcr);
+				 pcr, 1);
 	if (ret < 0) {
 		audit_cause = "store_entry";
 		ima_free_template_entry(entry);

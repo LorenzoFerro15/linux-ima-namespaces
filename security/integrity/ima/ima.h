@@ -194,7 +194,7 @@ int ima_init_namespace(struct ima_namespace *ns);
 int ima_add_template_entry(struct ima_namespace *ns,
 			   struct ima_template_entry *entry, int violation,
 			   const char *op, struct inode *inode,
-			   const unsigned char *filename);
+			   const unsigned char *filename, int starting_ima_ns_id);
 struct ima_queue_entry *ima_lookup_digest_entry
 						(struct ima_namespace *ns,
 						 u8 *digest_value,
@@ -344,7 +344,7 @@ int ima_alloc_init_template(struct ima_event_data *event_data,
 int ima_store_template(struct ima_namespace *ns,
 		       struct ima_template_entry *entry, int violation,
 		       struct inode *inode,
-		       const unsigned char *filename, int pcr);
+		       const unsigned char *filename, int pcr, int starting_ima_ns_id);
 void ima_free_template_entry(struct ima_template_entry *entry);
 const char *ima_d_path(const struct path *path, char **pathbuf, char *filename);
 

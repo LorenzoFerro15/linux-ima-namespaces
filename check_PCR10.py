@@ -83,7 +83,7 @@ if __name__ == '__main__':
             if template_hash == start_hash[hash_alg]:
                 template_hash = ff_hash[hash_alg]
  
-            if int(tokens[-1]) > 1 and tokens[2] == "ima-id":
+            if int(tokens[-1]) > 1 and tokens[2] == "ima-nsid-cnt":
                 # the value comes from a child ima_ns so have to be extended multiple times
                 number_of_extensions = int(tokens[-1])
                 for x in range(1,number_of_extensions):

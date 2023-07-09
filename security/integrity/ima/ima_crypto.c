@@ -602,7 +602,7 @@ static int ima_calc_field_array_hash_tfm(struct ima_field_data *field_data,
 		u32 datalen_to_hash = !ima_canonical_fmt ?
 				datalen : (__force u32)cpu_to_le32(datalen);
 
-		if (strcmp(td->name, "ima-id") != 0) {
+		if (strcmp(td->name, "ima-nsid-cnt") != 0) {
 			rc = crypto_shash_update(shash,
 						(const u8 *) &datalen_to_hash,
 						sizeof(datalen_to_hash));

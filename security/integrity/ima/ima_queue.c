@@ -20,15 +20,22 @@
 #include "ima.h"
 
 #define AUDIT_CAUSE_LEN_MAX 32
+#define MAX_VETT_QUEUE_LEN 1024
 
 /* pre-allocated array of tpm_digest structures to extend a PCR */
 static struct tpm_digest *digests;
+
+static int vett_queue[MAX_VETT_QUEUE_LEN];
+static int actual_id;
+static int next_empty_slot;
 
 /* mutex protects atomicity of extending measurement list
  * and extending the TPM PCR aggregate. Since tpm_extend can take
  * long (and the tpm driver uses a mutex), we can't use the spinlock.
  */
 static DEFINE_MUTEX(ima_extend_list_mutex);
+
+static DEFINE_MUTEX(vett_queue_mutex);
 
 /* lookup up the digest value in the hash table, and return the entry */
 struct ima_queue_entry *ima_lookup_digest_entry
@@ -155,7 +162,7 @@ static int ima_pcr_extend(struct tpm_digest *digests_arg, int pcr)
 int ima_add_template_entry(struct ima_namespace *ns,
 			   struct ima_template_entry *entry, int violation,
 			   const char *op, struct inode *inode,
-			   const unsigned char *filename)
+			   const unsigned char *filename, int starting_ima_ns_id)
 {
 	u8 *digest = entry->digests[ima_hash_algo_idx].digest;
 	struct tpm_digest *digests_arg = entry->digests;
@@ -163,6 +170,16 @@ int ima_add_template_entry(struct ima_namespace *ns,
 	char tpm_audit_cause[AUDIT_CAUSE_LEN_MAX];
 	int audit_info = 1;
 	int result = 0, tpmresult = 0;
+
+	if(starting_ima_ns_id == ns->id)
+	{
+		mutex_lock(&vett_queue_mutex);
+		vett_queue[next_empty_slot] = ns->id;
+		next_empty_slot = (next_empty_slot + 1)% MAX_VETT_QUEUE_LEN;
+		mutex_unlock(&vett_queue_mutex);
+	}
+
+	while(vett_queue[actual_id] != starting_ima_ns_id);
 
 	mutex_lock(&ima_extend_list_mutex);
 	if (!violation && !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE)) 
@@ -184,6 +201,9 @@ int ima_add_template_entry(struct ima_namespace *ns,
 		audit_info = 0;
 		goto out;
 	}
+
+	if(ns == &init_ima_ns)
+		actual_id = (actual_id+1) % MAX_VETT_QUEUE_LEN;
 
 	if (violation)		/* invalidate pcr */
 		digests_arg = digests;

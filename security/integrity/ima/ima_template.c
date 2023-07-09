@@ -26,7 +26,7 @@ static struct ima_template_desc builtin_templates[] = {
 	{.name = "ima-modsig", .fmt = "d-ng|n-ng|sig|d-modsig|modsig"},
 	{.name = "evm-sig",
 	 .fmt = "d-ng|n-ng|evmsig|xattrnames|xattrlengths|xattrvalues|iuid|igid|imode"},
-	{.name = "ima-id", .fmt = "d-ng|n-ng|id|num_mes"},
+	{.name = "ima-nsid-cnt", .fmt = "d-ng|n-ng|id|num_mes"},
 };
 
 static LIST_HEAD(defined_templates);

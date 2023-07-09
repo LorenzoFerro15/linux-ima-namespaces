@@ -103,7 +103,7 @@ out:
 int ima_store_template(struct ima_namespace *ns,
 		       struct ima_template_entry *entry,
 		       int violation, struct inode *inode,
-		       const unsigned char *filename, int pcr)
+		       const unsigned char *filename, int pcr, int starting_ima_ns_id)
 {
 	static const char op[] = "add_template_measure";
 	static const char audit_cause[] = "hashing_error";
@@ -123,7 +123,7 @@ int ima_store_template(struct ima_namespace *ns,
 	print_util(entry->template_data[0].data, entry->template_data[0].len, "value of hash calculated: ");
 	entry->pcr = pcr;
 	result = ima_add_template_entry(ns, entry, violation, op, inode,
-					filename);
+					filename, starting_ima_ns_id);
 	return result;
 }
 
@@ -157,7 +157,7 @@ void ima_add_violation(struct ima_namespace *ns,
 		goto err_out;
 	}
 	result = ima_store_template(ns, entry, violation, inode,
-				    filename, CONFIG_IMA_MEASURE_PCR_IDX);
+				    filename, CONFIG_IMA_MEASURE_PCR_IDX, 1);
 	if (result < 0)
 		ima_free_template_entry(entry);
 err_out:
@@ -391,7 +391,7 @@ void ima_store_measurement(struct ima_namespace *ns,
 		return;
 	}
 
-	result = ima_store_template(ns, entry, violation, inode, filename, pcr);
+	result = ima_store_template(ns, entry, violation, inode, filename, pcr, starting_ima_ns_id);
 	/* change the value of the integrity data associated with the inode only only if in
 	the init_ima_ns */
 	if ((!result || result == -EEXIST) && !(file->f_flags & O_DIRECT)) {
