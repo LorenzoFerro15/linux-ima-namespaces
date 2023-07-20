@@ -567,12 +567,6 @@ static inline struct ima_namespace
 	return smp_load_acquire(&user_ns->ima_ns);
 }
 
-static inline u32 ima_ns_id_from_user_ns(struct user_namespace *user_ns)
-{
-	struct ima_namespace *ima_ns = ima_ns_from_user_ns(user_ns);
-	return ima_ns->id;
-}
-
 static inline void user_ns_set_ima_ns(struct user_namespace *user_ns,
 				      struct ima_namespace *ns)
 {

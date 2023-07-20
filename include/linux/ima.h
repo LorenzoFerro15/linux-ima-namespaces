@@ -43,6 +43,7 @@ extern int ima_measure_critical_data(const char *event_label,
 				     const void *buf, size_t buf_len,
 				     bool hash, u8 *digest, size_t digest_len);
 extern int ima_fs_ns_init(struct user_namespace *user_ns, struct dentry *root);
+extern int ima_ns_id_from_user_ns(struct user_namespace *user_ns);
 
 #ifdef CONFIG_IMA_APPRAISE_BOOTPARAM
 extern void ima_appraise_parse_cmdline(void);
