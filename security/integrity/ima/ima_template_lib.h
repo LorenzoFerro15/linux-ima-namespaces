@@ -60,6 +60,10 @@ int ima_eventinodegid_init(struct ima_event_data *event_data,
 			   struct ima_field_data *field_data);
 int ima_eventinodemode_init(struct ima_event_data *event_data,
 			    struct ima_field_data *field_data);
+int digest_namespace_event_init(struct ima_event_data *event_data, 
+				struct ima_field_data *field_data);
+int ima_id_init(struct ima_event_data *event_data,
+			    struct ima_field_data *field_data);
 int ima_eventinodexattrnames_init(struct ima_event_data *event_data,
 				  struct ima_field_data *field_data);
 int ima_eventinodexattrlengths_init(struct ima_event_data *event_data,

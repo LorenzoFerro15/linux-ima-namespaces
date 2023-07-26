@@ -163,6 +163,16 @@ int ima_add_template_entry(struct ima_namespace *ns,
 	int audit_info = 1;
 	int result = 0, tpmresult = 0;
 
+	// measure done by a ima_namespace of a child ns
+	// insertion of the measure in the vPCR 
+	if(ns != &init_ima_ns) {
+		result = ima_add_digest_entry(ns, entry,
+				      !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE));
+		tpmresult = vprc_extension(ns->vPCR, digest);
+
+		return result;
+	}
+
 	mutex_lock(&ima_extend_list_mutex);
 	if (!violation && !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE)) {
 		if (ima_lookup_digest_entry(ns, digest, entry->pcr)) {

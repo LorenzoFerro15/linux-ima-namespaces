@@ -12,7 +12,7 @@ int counter_ns = 0;
 
 int ima_init_namespace(struct ima_namespace *ns)
 {
-	int ret;
+	int ret, i;
 
 	ns->ns_status_tree = RB_ROOT;
 	rwlock_init(&ns->ns_tree_lock);
@@ -27,6 +27,9 @@ int ima_init_namespace(struct ima_namespace *ns)
 	ns->arch_policy_entry = NULL;
 
 	ns->id = ++counter_ns;
+
+	for(i = 0; i < VPCR_MAX_LEN; i++)
+		ns->vPCR[i] = 0;
 
 	atomic_long_set(&ns->ima_htable.len, 0);
 	atomic_long_set(&ns->ima_htable.violations, 0);

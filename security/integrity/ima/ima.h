@@ -35,6 +35,7 @@ enum tpm_pcrs { TPM_PCR0 = 0, TPM_PCR8 = 8, TPM_PCR10 = 10 };
 
 #define IMA_HASH_BITS 10
 #define IMA_MEASURE_HTABLE_SIZE (1 << IMA_HASH_BITS)
+#define VPCR_MAX_LEN SHA1_DIGEST_SIZE
 
 #define IMA_TEMPLATE_FIELD_ID_MAX_LEN	16
 #define IMA_TEMPLATE_NUM_FIELDS_MAX	15
@@ -68,6 +69,7 @@ struct ima_event_data {
 	const void *buf;
 	int buf_len;
 	u32 ima_ns_id;
+	u8 template_start_digest[VPCR_MAX_LEN];
 };
 
 /* IMA template field data definition */
@@ -130,6 +132,7 @@ struct ima_namespace {
 #define IMA_NS_ACTIVE			1
 
 	int id; // identifier of the ima namespace
+	u8 vPCR[VPCR_MAX_LEN];
 
 	struct rb_root ns_status_tree;
 	rwlock_t ns_tree_lock;
@@ -221,6 +224,7 @@ void ima_init_template_list(void);
 int __init ima_init_digests(void);
 int ima_lsm_policy_change(struct notifier_block *nb, unsigned long event,
 			  void *lsm_data);
+int vprc_extension(u8 *vpcr_value, u8 *value_to_extend);
 
 /*
  * used to protect h_table and sha_table

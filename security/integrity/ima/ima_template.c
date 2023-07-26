@@ -26,7 +26,7 @@ static struct ima_template_desc builtin_templates[] = {
 	{.name = "ima-modsig", .fmt = "d-ng|n-ng|sig|d-modsig|modsig"},
 	{.name = "evm-sig",
 	 .fmt = "d-ng|n-ng|evmsig|xattrnames|xattrlengths|xattrvalues|iuid|igid|imode"},
-	{.name = "", .fmt = ""},	/* placeholder for a custom format */
+	{.name = "ima-dig-imaid", .fmt = "digev|imansid"},	/* placeholder for a custom format */
 };
 
 static LIST_HEAD(defined_templates);
@@ -69,12 +69,13 @@ static const struct ima_template_field supported_fields[] = {
 	{.field_id = "xattrvalues",
 	 .field_init = ima_eventinodexattrvalues_init,
 	 .field_show = ima_show_template_sig},
-	{.field_id = "imaidstart",
-	 .field_init = ima_eventinodexattrvalues_init,
-	 .field_show = ima_show_template_sig},
-	{.field_id = "imaidmes",
-	 .field_init = ima_eventinodexattrvalues_init,
-	 .field_show = ima_show_template_sig},
+	{.field_id = "digev",
+	 .field_init = digest_namespace_event_init,
+	 .field_show = ima_show_template_digest},
+	{.field_id = "imansid",
+	 .field_init = ima_id_init,
+	 .field_show = ima_show_template_string},
+
 };
 
 /*

@@ -880,3 +880,20 @@ int ima_calc_boot_aggregate(struct ima_digest_data *hash)
 
 	return rc;
 }
+
+int vprc_extension(u8 *vpcr_value, u8 *value_to_extend)
+{
+	int rc;
+	SHASH_DESC_ON_STACK(shash, ima_algo_array[ima_hash_algo_idx].tfm);
+	shash->tfm = ima_algo_array[ima_hash_algo_idx].tfm;
+
+	rc = crypto_shash_init(shash);
+
+	rc = crypto_shash_update(shash, vpcr_value,
+						VPCR_MAX_LEN);
+	rc = crypto_shash_update(shash, value_to_extend, VPCR_MAX_LEN);
+
+	rc = crypto_shash_final(shash, vpcr_value);
+
+	return rc;
+}
