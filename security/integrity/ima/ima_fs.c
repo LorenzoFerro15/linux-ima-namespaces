@@ -531,6 +531,12 @@ static const struct file_operations ima_active_ops = {
 	.write = ima_write_active,
 };
 
+int ima_ns_id_from_user_ns(struct user_namespace *user_ns)
+{
+	struct ima_namespace *ima_ns = ima_ns_from_user_ns(user_ns);
+	return ima_ns->id;
+}
+
 int ima_fs_ns_init(struct user_namespace *user_ns, struct dentry *root)
 {
 	struct ima_namespace *ns = ima_ns_from_user_ns(user_ns);

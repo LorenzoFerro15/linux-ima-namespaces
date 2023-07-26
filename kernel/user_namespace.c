@@ -1325,6 +1325,32 @@ static struct ns_common *userns_get(struct task_struct *task)
 	return user_ns ? &user_ns->ns : NULL;
 }
 
+static struct ns_common *imans_get(struct task_struct *task)
+{
+	struct user_namespace *user_ns;
+	int ima_id = 0;
+	struct ns_common *ima_ns_common = kmalloc(sizeof(struct ns_common), GFP_KERNEL);
+
+	rcu_read_lock();
+	user_ns = get_user_ns(__task_cred(task)->user_ns);
+	rcu_read_unlock();
+
+	if(user_ns == NULL)
+		return NULL;
+
+	#ifdef CONFIG_IMA_NS
+		if(user_ns->ima_ns != NULL)
+			ima_id = ima_ns_id_from_user_ns(user_ns);
+	#endif
+
+	ima_ns_common->count = user_ns->ns.count;
+	ima_ns_common->ops = user_ns->ns.ops;
+	ima_ns_common->stashed = user_ns->ns.stashed;
+	ima_ns_common->inum = ima_id;
+
+	return ima_ns_common;
+}
+
 static void userns_put(struct ns_common *ns)
 {
 	put_user_ns(to_user_ns(ns));
@@ -1391,6 +1417,16 @@ const struct proc_ns_operations userns_operations = {
 	.name		= "user",
 	.type		= CLONE_NEWUSER,
 	.get		= userns_get,
+	.put		= userns_put,
+	.install	= userns_install,
+	.owner		= userns_owner,
+	.get_parent	= ns_get_owner,
+};
+
+const struct proc_ns_operations imans_operations = {
+	.name		= "ima_ns",
+	.type		= CLONE_NEWUSER,
+	.get		= imans_get,
 	.put		= userns_put,
 	.install	= userns_install,
 	.owner		= userns_owner,

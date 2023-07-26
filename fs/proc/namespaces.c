@@ -29,6 +29,9 @@ static const struct proc_ns_operations *ns_entries[] = {
 #ifdef CONFIG_USER_NS
 	&userns_operations,
 #endif
+#ifdef CONFIG_IMA_NS
+	&imans_operations,
+#endif
 	&mntns_operations,
 #ifdef CONFIG_CGROUPS
 	&cgroupns_operations,
