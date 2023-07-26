@@ -36,7 +36,7 @@ enum digest_type {
 	DIGEST_TYPE__LAST
 };
 
-#define MAX_LEN_ID 10
+#define MAX_LEN_ID 40
 #define DIGEST_TYPE_NAME_LEN_MAX 7	/* including NUL */
 static const char * const digest_type_name[DIGEST_TYPE__LAST] = {
 	[DIGEST_TYPE_IMA] = "ima",
@@ -419,15 +419,18 @@ out:
 
 int digest_namespace_event_init(struct ima_event_data *event_data, 
 				struct ima_field_data *field_data) {
-	u8 *cur_digest = NULL, hash_algo = ima_hash_algo;
-	u32 cur_digestsize = 0;
 
-	cur_digest = event_data->template_start_digest;
-	cur_digestsize = VPCR_MAX_LEN;
+	char string[MAX_LEN_ID];
+	int offset=0;
 
-	return ima_eventdigest_init_common(cur_digest, cur_digestsize,
-					   DIGEST_TYPE__LAST, hash_algo,
-					   field_data);
+	for (int i = 0; i < 20; i++)
+    {
+        sprintf(string+offset, "%02hhX", event_data->template_start_digest[i]);
+        offset+=2;
+    }
+
+	return ima_write_template_field_data(string, strlen(string),
+					     DATA_FMT_UINT, field_data);
 }
 
 int ima_id_init(struct ima_event_data *event_data,

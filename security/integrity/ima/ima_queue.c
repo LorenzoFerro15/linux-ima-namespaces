@@ -170,6 +170,12 @@ int ima_add_template_entry(struct ima_namespace *ns,
 				      !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE));
 		tpmresult = vprc_extension(ns->vPCR, digest);
 
+
+		print_util(ns->vPCR, 20, "new digest value: ");
+
+		host_extension_vpcr(ns->id, ns->vPCR);
+
+
 		return result;
 	}
 

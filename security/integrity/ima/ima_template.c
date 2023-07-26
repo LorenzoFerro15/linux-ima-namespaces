@@ -71,7 +71,7 @@ static const struct ima_template_field supported_fields[] = {
 	 .field_show = ima_show_template_sig},
 	{.field_id = "digev",
 	 .field_init = digest_namespace_event_init,
-	 .field_show = ima_show_template_digest},
+	 .field_show = ima_show_template_string},
 	{.field_id = "imansid",
 	 .field_init = ima_id_init,
 	 .field_show = ima_show_template_string},
@@ -184,7 +184,7 @@ struct ima_template_desc *lookup_template_desc(const char *name)
 	return found ? template_desc : NULL;
 }
 
-static const struct ima_template_field *
+const struct ima_template_field *
 lookup_template_field(const char *field_id)
 {
 	int i;

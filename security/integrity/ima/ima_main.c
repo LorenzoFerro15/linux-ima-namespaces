@@ -441,29 +441,13 @@ static int process_measurement(struct user_namespace *user_ns,
 	struct ima_namespace *ns;
 	int ret = 0;
 
-	while (user_ns) {
-		ns = ima_ns_from_user_ns(user_ns);
-		if (ns_is_active(ns)) {
-			int rc;
+	ns = ima_ns_from_user_ns(user_ns);
+	if (ns_is_active(ns)) {
 
-			rc = __process_measurement(ns, file, cred, secid, buf,
-						   size, mask, func);
-			switch (rc) {
-			case 0:
-				break;
-			case -EACCES:
-				/* return this error at the end but continue */
-				ret = -EACCES;
-				break;
-			default:
-				/* should not happen */
-				ret = -EACCES;
-				WARN_ON_ONCE(true);
-			}
-		}
-
-		user_ns = user_ns->parent;
+	ret = __process_measurement(ns, file, cred, secid, buf,
+ 					   size, mask, func);
 	}
+
 
 	return ret;
 }

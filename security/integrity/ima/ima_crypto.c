@@ -887,6 +887,9 @@ int vprc_extension(u8 *vpcr_value, u8 *value_to_extend)
 	SHASH_DESC_ON_STACK(shash, ima_algo_array[ima_hash_algo_idx].tfm);
 	shash->tfm = ima_algo_array[ima_hash_algo_idx].tfm;
 
+	print_util(vpcr_value, 20, "in vpcr fun before: ");
+	print_util(value_to_extend, 20, "value to extend: ");
+
 	rc = crypto_shash_init(shash);
 
 	rc = crypto_shash_update(shash, vpcr_value,
@@ -894,6 +897,8 @@ int vprc_extension(u8 *vpcr_value, u8 *value_to_extend)
 	rc = crypto_shash_update(shash, value_to_extend, VPCR_MAX_LEN);
 
 	rc = crypto_shash_final(shash, vpcr_value);
+
+	print_util(vpcr_value, 20, "in vpcr fun after: ");
 
 	return rc;
 }

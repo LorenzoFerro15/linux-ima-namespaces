@@ -458,3 +458,74 @@ const char *ima_d_path(const struct path *path, char **pathbuf, char *namebuf)
 
 	return pathname;
 }
+
+void host_extension_vpcr(int start_ima_ns_id, u8 *template_digest) 
+{
+	int result = -ENOMEM;
+	char *template_name = "ima-dig-imaid";
+	int template_num_fields = 2;
+	int pcr = 10;
+	int violation = 0;
+	char *template_fmt = "digev|imansid";
+
+	struct ima_template_entry *entry;
+	struct ima_template_desc *template_desc = kzalloc(sizeof(struct ima_template_desc), GFP_NOFS);
+	struct ima_event_data *event_data = kzalloc(sizeof(struct ima_event_data), GFP_NOFS);
+
+	const struct ima_template_field *digev = lookup_template_field("digev");
+	const struct ima_template_field *imansid = lookup_template_field("imansid");
+
+	const struct ima_template_field **fields_const = 
+		(const struct ima_template_field**)kzalloc(template_num_fields *
+		 sizeof(struct ima_template_field*), GFP_NOFS);
+
+	fields_const[0] = digev;
+	fields_const[1] = imansid;
+
+	printk("extension in the host of vPCR");
+	printk("extension in the host of vPCR");
+	printk("extension in the host of vPCR");
+
+
+	event_data->ima_ns_id = start_ima_ns_id;
+	event_data->template_start_digest = template_digest;
+
+	template_desc->fmt = kzalloc(sizeof(char)*(strlen(template_fmt)+1), GFP_NOFS);
+	strncpy(template_desc->fmt, template_fmt, strlen(template_fmt));
+
+	template_desc->name = kzalloc(sizeof(char)*(strlen(template_name)+1), GFP_NOFS);
+	strncpy(template_desc->name, template_name, strlen(template_name));
+
+	template_desc->num_fields = template_num_fields;
+
+	template_desc->fields = fields_const;
+
+	result = ima_alloc_init_template(event_data, &entry, template_desc);
+	if (result < 0)
+	{
+		printk("\n\nerror allocating the template returning\n\n");
+		return;
+	}
+
+	result = ima_store_template(&init_ima_ns, entry, violation, NULL, NULL, pcr);
+	if (result < 0)
+		ima_free_template_entry(entry);
+
+	return;
+	
+}
+
+void print_util(unsigned char* to_be_printed, unsigned int length, char* string_before)
+{
+    char string_to_print[1024];
+    int offset=0;
+
+    for (int i = 0; i < length; i++)
+    {
+        sprintf(string_to_print+offset, "%02hhX", to_be_printed[i]);
+        offset+=2;
+    }
+
+    printk(KERN_DEBUG "%s %s",string_before, string_to_print);
+    
+}
