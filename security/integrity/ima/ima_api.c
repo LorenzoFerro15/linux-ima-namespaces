@@ -491,10 +491,26 @@ void host_extension_vpcr(int start_ima_ns_id, u8 *template_digest)
 	event_data->template_start_digest = template_digest;
 
 	template_desc->fmt = kzalloc(sizeof(char)*(strlen(template_fmt)+1), GFP_NOFS);
-	strncpy(template_desc->fmt, template_fmt, strlen(template_fmt));
+
+	if(template_desc->fmt == NULL)
+	{
+		printk("error allocating the fmt returning");
+		return;
+	}
+	strncpy(template_desc->fmt, template_fmt, strlen(template_fmt)+1);
+
+	template_desc->fmt[strlen(template_fmt)] = '\0';
 
 	template_desc->name = kzalloc(sizeof(char)*(strlen(template_name)+1), GFP_NOFS);
-	strncpy(template_desc->name, template_name, strlen(template_name));
+
+	if(template_desc->name == NULL)
+	{
+		printk("error allocating the name returning");
+		return;
+	}
+	strncpy(template_desc->name, template_name, strlen(template_name)+1);
+
+	template_desc->name[strlen(template_name)] = '\0';
 
 	template_desc->num_fields = template_num_fields;
 

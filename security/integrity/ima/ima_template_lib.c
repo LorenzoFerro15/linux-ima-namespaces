@@ -36,7 +36,7 @@ enum digest_type {
 	DIGEST_TYPE__LAST
 };
 
-#define MAX_LEN_ID 40
+#define MAX_LEN_ID 50
 #define DIGEST_TYPE_NAME_LEN_MAX 7	/* including NUL */
 static const char * const digest_type_name[DIGEST_TYPE__LAST] = {
 	[DIGEST_TYPE_IMA] = "ima",
