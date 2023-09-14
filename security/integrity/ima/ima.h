@@ -35,7 +35,7 @@ enum tpm_pcrs { TPM_PCR0 = 0, TPM_PCR8 = 8, TPM_PCR10 = 10 };
 
 #define IMA_HASH_BITS 10
 #define IMA_MEASURE_HTABLE_SIZE (1 << IMA_HASH_BITS)
-#define VPCR_MAX_LEN SHA1_DIGEST_SIZE
+#define NPCR_MAX_LEN SHA1_DIGEST_SIZE
 
 #define IMA_TEMPLATE_FIELD_ID_MAX_LEN	16
 #define IMA_TEMPLATE_NUM_FIELDS_MAX	15
@@ -132,7 +132,7 @@ struct ima_namespace {
 #define IMA_NS_ACTIVE			1
 
 	int id; // identifier of the ima namespace
-	u8 vPCR[VPCR_MAX_LEN];
+	u8 nPCR[NPCR_MAX_LEN];
 
 	struct rb_root ns_status_tree;
 	rwlock_t ns_tree_lock;
@@ -225,7 +225,7 @@ void ima_init_template_list(void);
 int __init ima_init_digests(void);
 int ima_lsm_policy_change(struct notifier_block *nb, unsigned long event,
 			  void *lsm_data);
-int vprc_extension(u8 *vpcr_value, u8 *value_to_extend);
+int npcr_extension(u8 *npcr_value, u8 *value_to_extend);
 
 /*
  * used to protect h_table and sha_table
@@ -323,7 +323,7 @@ void ima_store_measurement(struct ima_namespace *ns,
 			   struct evm_ima_xattr_data *xattr_value,
 			   int xattr_len, const struct modsig *modsig, int pcr,
 			   struct ima_template_desc *template_desc);
-void host_extension_vpcr(int start_ima_ns_id, u8 *template_digest);
+void host_extension_npcr(int start_ima_ns_id, u8 *template_digest);
 void print_util(unsigned char* to_be_printed, unsigned int length, char* string_before);
 int process_buffer_measurement(struct ima_namespace *ns,
 			       struct user_namespace *mnt_userns,

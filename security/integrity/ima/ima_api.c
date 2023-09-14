@@ -459,7 +459,7 @@ const char *ima_d_path(const struct path *path, char **pathbuf, char *namebuf)
 	return pathname;
 }
 
-void host_extension_vpcr(int start_ima_ns_id, u8 *template_digest) 
+void host_extension_npcr(int start_ima_ns_id, u8 *template_digest) 
 {
 	int result = -ENOMEM;
 	char *template_name = "ima-dig-imaid";
@@ -482,9 +482,9 @@ void host_extension_vpcr(int start_ima_ns_id, u8 *template_digest)
 	fields_const[0] = digev;
 	fields_const[1] = imansid;
 
-	printk("extension in the host of vPCR");
-	printk("extension in the host of vPCR");
-	printk("extension in the host of vPCR");
+	printk("extension in the host of nPCR");
+	printk("extension in the host of nPCR");
+	printk("extension in the host of nPCR");
 
 
 	event_data->ima_ns_id = start_ima_ns_id;

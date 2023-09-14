@@ -28,8 +28,8 @@ int ima_init_namespace(struct ima_namespace *ns)
 
 	ns->id = ++counter_ns;
 
-	for(i = 0; i < VPCR_MAX_LEN; i++)
-		ns->vPCR[i] = 0;
+	for(i = 0; i < NPCR_MAX_LEN; i++)
+		ns->nPCR[i] = 0;
 
 	atomic_long_set(&ns->ima_htable.len, 0);
 	atomic_long_set(&ns->ima_htable.violations, 0);

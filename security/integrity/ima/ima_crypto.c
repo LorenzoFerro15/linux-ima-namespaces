@@ -881,24 +881,24 @@ int ima_calc_boot_aggregate(struct ima_digest_data *hash)
 	return rc;
 }
 
-int vprc_extension(u8 *vpcr_value, u8 *value_to_extend)
+int npcr_extension(u8 *npcr_value, u8 *value_to_extend)
 {
 	int rc;
 	SHASH_DESC_ON_STACK(shash, ima_algo_array[ima_hash_algo_idx].tfm);
 	shash->tfm = ima_algo_array[ima_hash_algo_idx].tfm;
 
-	print_util(vpcr_value, 20, "in vpcr fun before: ");
+	print_util(npcr_value, 20, "in npcr fun before: ");
 	print_util(value_to_extend, 20, "value to extend: ");
 
 	rc = crypto_shash_init(shash);
 
-	rc = crypto_shash_update(shash, vpcr_value,
-						VPCR_MAX_LEN);
-	rc = crypto_shash_update(shash, value_to_extend, VPCR_MAX_LEN);
+	rc = crypto_shash_update(shash, npcr_value,
+						NPCR_MAX_LEN);
+	rc = crypto_shash_update(shash, value_to_extend, NPCR_MAX_LEN);
 
-	rc = crypto_shash_final(shash, vpcr_value);
+	rc = crypto_shash_final(shash, npcr_value);
 
-	print_util(vpcr_value, 20, "in vpcr fun after: ");
+	print_util(npcr_value, 20, "in npcr fun after: ");
 
 	return rc;
 }

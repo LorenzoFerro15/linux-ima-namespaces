@@ -417,20 +417,24 @@ out:
 					   field_data);
 }
 
+/*
+ * This function writes the digest of an event related with the
+ * extension of an nPCR.
+ */
 int digest_namespace_event_init(struct ima_event_data *event_data, 
-				struct ima_field_data *field_data) {
+				struct ima_field_data *field_data)
+{
 
-	char string[MAX_LEN_ID];
-	int offset=0;
+	u8 *digest, hash_algo = ima_hash_algo;
 
-	for (int i = 0; i < 20; i++)
-    {
-        sprintf(string+offset, "%02hhX", event_data->template_start_digest[i]);
-        offset+=2;
-    }
+	digest = event_data->template_start_digest;
 
-	return ima_write_template_field_data(string, strlen(string),
-					     DATA_FMT_UINT, field_data);
+	print_util(digest, 20, "digest of the nPCR: ");
+
+	return ima_eventdigest_init_common(digest,
+					hash_digest_size[HASH_ALGO_SHA1],
+					DIGEST_TYPE__LAST, hash_algo,
+					field_data);
 }
 
 int ima_id_init(struct ima_event_data *event_data,

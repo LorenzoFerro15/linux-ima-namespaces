@@ -163,17 +163,20 @@ int ima_add_template_entry(struct ima_namespace *ns,
 	int audit_info = 1;
 	int result = 0, tpmresult = 0;
 
-	// measure done by a ima_namespace of a child ns
-	// insertion of the measure in the vPCR 
+	/* 
+	 * Measure made by a ima_ns that is not the init_ima_ns
+	 * so we perform the nPCR extention and then the host
+	 * PCR10 extention.
+	 */
 	if(ns != &init_ima_ns) {
 		result = ima_add_digest_entry(ns, entry,
 				      !IS_ENABLED(CONFIG_IMA_DISABLE_HTABLE));
-		tpmresult = vprc_extension(ns->vPCR, digest);
+		tpmresult = npcr_extension(ns->nPCR, digest);
 
 
-		print_util(ns->vPCR, 20, "new digest value: ");
+		print_util(ns->nPCR, 20, "new digest value: ");
 
-		host_extension_vpcr(ns->id, ns->vPCR);
+		host_extension_npcr(ns->id, ns->nPCR);
 
 
 		return result;
