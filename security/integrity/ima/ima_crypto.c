@@ -884,8 +884,8 @@ int ima_calc_boot_aggregate(struct ima_digest_data *hash)
 int npcr_extension(u8 *npcr_value, u8 *value_to_extend)
 {
 	int rc;
-	SHASH_DESC_ON_STACK(shash, ima_algo_array[ima_hash_algo_idx].tfm);
-	shash->tfm = ima_algo_array[ima_hash_algo_idx].tfm;
+	SHASH_DESC_ON_STACK(shash, ima_algo_array[ima_hash_algo_idx].tfm); /* ima_sha1_idx */
+	shash->tfm = ima_algo_array[ima_hash_algo_idx].tfm; /* ima_sha1_idx */
 
 	print_util(npcr_value, 20, "in npcr fun before: ");
 	print_util(value_to_extend, 20, "value to extend: ");

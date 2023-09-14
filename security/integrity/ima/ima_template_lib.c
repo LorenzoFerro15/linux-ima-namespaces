@@ -425,15 +425,17 @@ int digest_namespace_event_init(struct ima_event_data *event_data,
 				struct ima_field_data *field_data)
 {
 
-	u8 *digest, hash_algo = ima_hash_algo;
+	u8 *digest/* , hash_algo = ima_hash_algo */;
 
 	digest = event_data->template_start_digest;
 
 	print_util(digest, 20, "digest of the nPCR: ");
 
+	/*
+	 * It is used HASH_ALGO_SHA1*/
 	return ima_eventdigest_init_common(digest,
 					hash_digest_size[HASH_ALGO_SHA1],
-					DIGEST_TYPE__LAST, hash_algo,
+					DIGEST_TYPE__LAST, HASH_ALGO_SHA1,
 					field_data);
 }
 
